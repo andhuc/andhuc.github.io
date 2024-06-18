@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Quiz</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <style>
+    body {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="text-center">Dynamic Quiz</h1>
+  <div id="input-container" class="mt-4">
+    <div class="form-group">
+      <label for="json-input">Enter Quiz JSON or Text Questions:</label>
+      <textarea class="form-control" id="json-input" rows="10"></textarea>
+    </div>
+    <button id="load-quiz" class="btn btn-primary">Load Quiz</button>
+  </div>
+  <div id="quiz-container" class="mt-4" style="display: none;">
+    <!-- Quiz content will be injected here -->
+  </div>
+  <div id="result-container" class="mt-4">
+    <!-- Result will be shown here -->
+  </div>
+</div>
+
+<script>
+  let questions = [];
+  let currentQuestionIndex = -1;
+
+  function parseTextInput(input) {
+    const lines = input.trim().split('\n');
+    const parsedQuestions = [];
+    let currentQuestion = null;
+    
+    lines.forEach(line => {
+      if (line.match(/^\d+\./)) {
+        if (currentQuestion) {
+          parsedQuestions.push(currentQuestion);
+        }
+        const questionMatch = line.match(/^(\d+)\.\s+(.*)$/);
+        currentQuestion = {
+          number: parseInt(questionMatch[1], 10),
+          question: questionMatch[2],
+          options: {},
+          answer: null
+        };
+      } else if (line.match(/^[A-D]\./)) {
+        const optionMatch = line.match(/^([A-D])\.\s+(.*)$/);
+        if (currentQuestion) {
+          currentQuestion.options[optionMatch[1]] = optionMatch[2];
+        }
+      } else if (line.match(/^[A-D]$/)) {
+        if (currentQuestion) {
+          currentQuestion.answer = line.trim();
+        }
+      }
+    });
+
+    if (currentQuestion) {
+      parsedQuestions.push(currentQuestion);
+    }
+
+    return parsedQuestions;
+  }
+
+  function getRandomQuestion() {
+    const randomIndex = Math.floor(Math.random() * questions.length);
+    return questions[randomIndex];
+  }
+
+  function loadQuestion() {
+    const question = getRandomQuestion();
+    currentQuestionIndex = questions.indexOf(question);
+
+    const quizContainer = document.getElementById('quiz-container');
+    quizContainer.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Question ${question.number}</h5>
+          <p class="card-text">${question.question}</p>
+          <form id="quiz-form">
+            ${Object.entries(question.options).map(([key, value]) => `
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="answer" id="answer-${key}" value="${key}">
+                <label class="form-check-label" for="answer-${key}">
+                  ${key}: ${value}
+                </label>
+              </div>
+            `).join('')}
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('quiz-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const selectedOption = document.querySelector('input[name="answer"]:checked');
+      if (selectedOption) {
+        const userAnswer = selectedOption.value;
+        checkAnswer(userAnswer, question.answer);
+      } else {
+        alert('Please select an answer.');
+      }
+    });
+  }
+
+  function checkAnswer(userAnswer, correctAnswer) {
+    const resultContainer = document.getElementById('result-container');
+    if (userAnswer === correctAnswer) {
+      resultContainer.innerHTML = `<div class="alert alert-success">Correct!</div>`;
+    } else {
+      resultContainer.innerHTML = `<div class="alert alert-danger">Wrong! The correct answer is ${correctAnswer}.</div>`;
+    }
+
+    setTimeout(() => {
+      resultContainer.innerHTML = '';
+      loadQuestion();
+    }, 2000);
+  }
+
+  document.getElementById('load-quiz').addEventListener('click', function() {
+    const jsonInput = document.getElementById('json-input').value;
+    try {
+      const parsedData = JSON.parse(jsonInput);
+      if (parsedData.questions) {
+        questions = parsedData.questions;
+      } else {
+        throw new Error('Invalid JSON format.');
+      }
+    } catch (e) {
+      try {
+        questions = parseTextInput(jsonInput);
+      } catch (parseError) {
+        alert('Invalid input. Please enter a valid quiz JSON or formatted text.');
+        return;
+      }
+    }
+
+    if (questions && questions.length > 0) {
+      document.getElementById('input-container').style.display = 'none';
+      document.getElementById('quiz-container').style.display = 'block';
+      loadQuestion();
+    } else {
+      alert('No valid questions found.');
+    }
+  });
+</script>
+
+</body>
+</html>
