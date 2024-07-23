@@ -35,39 +35,35 @@
   let currentQuestionIndex = -1;
 
   function parseTextInput(input) {
-    const lines = input.trim().split('\n');
+    const blocks = input.trim().split(/\n\s*\n/); // Split by double newlines
     const parsedQuestions = [];
-    let currentQuestion = null;
-    
-    lines.forEach(line => {
-      if (line.trim().length === 0) return;
 
-      if (line.match(/^\d+\./)) {
-        if (currentQuestion) {
-          parsedQuestions.push(currentQuestion);
+    blocks.forEach(block => {
+      const lines = block.trim().split('\n');
+      if (lines.length < 2) return; // Skip invalid blocks
+
+      const questionText = lines[0].trim();
+      const options = {};
+      let answer = null;
+
+      lines.slice(1, -1).forEach(line => {
+        if (line.match(/^[a-d]\)/i)) {
+          const optionMatch = line.match(/^([a-d])\)\s+(.*)$/i);
+          if (optionMatch) {
+            options[optionMatch[1].toUpperCase()] = optionMatch[2];
+          }
         }
-        const questionMatch = line.match(/^(\d+)\.\s+(.*)$/);
-        currentQuestion = {
-          number: parseInt(questionMatch[1], 10),
-          question: questionMatch[2],
-          options: {},
-          answer: null
-        };
-      } else if (line.match(/^[a-d]\)/i)) {
-        const optionMatch = line.match(/^([a-d])\)\s+(.*)$/i);
-        if (currentQuestion) {
-          currentQuestion.options[optionMatch[1].toUpperCase()] = optionMatch[2];
-        }
-      } else if (line.match(/^[a-d]$/i)) {
-        if (currentQuestion) {
-          currentQuestion.answer = line.trim().toUpperCase();
-        }
-      }
+      });
+
+      answer = lines[lines.length - 1].trim().toUpperCase();
+
+      parsedQuestions.push({
+        number: parsedQuestions.length + 1, // Auto-generate question number
+        question: questionText,
+        options: options,
+        answer: answer
+      });
     });
-
-    if (currentQuestion) {
-      parsedQuestions.push(currentQuestion);
-    }
 
     return parsedQuestions;
   }
