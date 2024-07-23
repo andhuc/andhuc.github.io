@@ -17,7 +17,7 @@
   <h1 class="text-center">Dynamic Quiz</h1>
   <div id="input-container" class="mt-4">
     <div class="form-group">
-      <label for="json-input">Enter Quiz JSON or Text Questions:</label>
+      <label for="json-input">Enter Quiz Text Questions:</label>
       <textarea class="form-control" id="json-input" rows="10"></textarea>
     </div>
     <button id="load-quiz" class="btn btn-primary">Load Quiz</button>
@@ -40,6 +40,8 @@
     let currentQuestion = null;
     
     lines.forEach(line => {
+      if (line.trim().length === 0) return;
+
       if (line.match(/^\d+\./)) {
         if (currentQuestion) {
           parsedQuestions.push(currentQuestion);
@@ -51,14 +53,14 @@
           options: {},
           answer: null
         };
-      } else if (line.match(/^[A-D]\./)) {
-        const optionMatch = line.match(/^([A-D])\.\s+(.*)$/);
+      } else if (line.match(/^[a-d]\)/i)) {
+        const optionMatch = line.match(/^([a-d])\)\s+(.*)$/i);
         if (currentQuestion) {
-          currentQuestion.options[optionMatch[1]] = optionMatch[2];
+          currentQuestion.options[optionMatch[1].toUpperCase()] = optionMatch[2];
         }
-      } else if (line.match(/^[A-D]$/)) {
+      } else if (line.match(/^[a-d]$/i)) {
         if (currentQuestion) {
-          currentQuestion.answer = line.trim();
+          currentQuestion.answer = line.trim().toUpperCase();
         }
       }
     });
@@ -127,21 +129,12 @@
   }
 
   document.getElementById('load-quiz').addEventListener('click', function() {
-    const jsonInput = document.getElementById('json-input').value;
+    const textInput = document.getElementById('json-input').value;
     try {
-      const parsedData = JSON.parse(jsonInput);
-      if (parsedData.questions) {
-        questions = parsedData.questions;
-      } else {
-        throw new Error('Invalid JSON format.');
-      }
+      questions = parseTextInput(textInput);
     } catch (e) {
-      try {
-        questions = parseTextInput(jsonInput);
-      } catch (parseError) {
-        alert('Invalid input. Please enter a valid quiz JSON or formatted text.');
-        return;
-      }
+      alert('Invalid input. Please enter a valid quiz text.');
+      return;
     }
 
     if (questions && questions.length > 0) {
