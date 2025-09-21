@@ -1,147 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
   <meta charset="UTF-8">
+  <title>Quiz Lịch sử</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quiz</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body {
-      padding: 20px;
+    .fade-in {
+      animation: fadeIn 0.4s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .firework {
+      position: fixed;
+      font-size: 2rem;
+      animation: pop 1s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(0.5);
+        opacity: 1;
+      }
+
+      80% {
+        transform: scale(1.5);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
     }
   </style>
 </head>
-<body>
 
-<div class="container">
-  <h1 class="text-center">Dynamic Quiz</h1>
-  <div id="input-container" class="mt-4">
-    <div class="form-group">
-      <label for="json-input">Enter Quiz Text Questions:</label>
-      <textarea class="form-control" id="json-input" rows="10"></textarea>
+<body class="min-h-screen bg-gradient-to-b from-yellow-50 to-yellow-100 flex items-center justify-center p-4">
+  <div class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 sm:p-8 fade-in relative overflow-hidden">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+      <h1 class="text-xl sm:text-2xl font-bold text-yellow-900 flex items-center gap-2">
+        <i class="fa-solid fa-landmark"></i> Quiz Lịch sử
+      </h1>
+      <span id="progress" class="text-sm text-gray-600"></span>
     </div>
-    <button id="load-quiz" class="btn btn-primary">Load Quiz</button>
+
+    <!-- Question -->
+    <h2 id="question" class="text-lg sm:text-xl font-semibold mb-6 text-gray-800 fade-in"></h2>
+
+    <!-- Answers -->
+    <div id="answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+    <!-- Next Button -->
+    <div class="mt-6 flex justify-center sm:justify-center">
+      <button id="nextBtn"
+        class="invisible w-full sm:w-auto bg-yellow-700 hover:bg-yellow-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-forward"></i> Tiếp
+      </button>
+    </div>
   </div>
-  <div id="quiz-container" class="mt-4" style="display: none;">
-    <!-- Quiz content will be injected here -->
-  </div>
-  <div id="result-container" class="mt-4">
-    <!-- Result will be shown here -->
-  </div>
-</div>
 
-<script>
-  let questions = [];
-  let currentQuestionIndex = -1;
+  <script>
+    let data = [];
+    let used = [];
+    let currentQuestion = null;
 
-  function parseTextInput(input) {
-    const blocks = input.trim().split(/\n\s*\n/); // Split by double newlines
-    const parsedQuestions = [];
+    async function loadData() {
+      const res = await fetch('/data.json');
+      data = await res.json();
+      showRandomQuestion();
+    }
 
-    blocks.forEach(block => {
-      const lines = block.trim().split('\n');
-      if (lines.length < 2) return; // Skip invalid blocks
+    function showRandomQuestion() {
+      document.getElementById("nextBtn").classList.add("invisible");
 
-      const questionText = lines[0].trim();
-      const options = {};
-      let answer = null;
+      if (used.length === data.length) used = []; // reset if all used
+      let q;
+      do {
+        q = data[Math.floor(Math.random() * data.length)];
+      } while (used.includes(q));
+      used.push(q);
+      currentQuestion = q;
 
-      lines.slice(1, -1).forEach(line => {
-        if (line.match(/^[a-d]\)/i)) {
-          const optionMatch = line.match(/^([a-d])\)\s+(.*)$/i);
-          if (optionMatch) {
-            options[optionMatch[1].toUpperCase()] = optionMatch[2];
-          }
+      document.getElementById("progress").textContent = `Câu ${used.length}/${data.length}`;
+
+      const qElem = document.getElementById("question");
+      qElem.textContent = q.question;
+      qElem.classList.remove("fade-in");
+      void qElem.offsetWidth; // restart animation
+      qElem.classList.add("fade-in");
+
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+      q.answer.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.innerHTML = `<i class="fa-solid fa-scroll text-yellow-700 mr-2"></i>${ans}`;
+        btn.className = "answer fade-in w-full text-left px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-yellow-50 transition duration-300";
+        btn.onclick = () => checkAnswer(btn, idx);
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    const emojiList = ["🎉", "🏆", "⭐", "✨", "🔥", "🥳", "👏", "💯", "🥇", "🗿"];
+
+    function spawnFirework(x, y) {
+      const fw = document.createElement("div");
+      fw.textContent = emojiList[Math.floor(Math.random() * emojiList.length)];
+      fw.className = "firework";
+      fw.style.left = x + "px";
+      fw.style.top = y + "px";
+      document.body.appendChild(fw);
+      setTimeout(() => fw.remove(), 1000);
+    }
+
+    function checkAnswer(btn, idx) {
+      const answers = document.querySelectorAll(".answer");
+      answers.forEach(a => a.disabled = true);
+
+      if (idx === currentQuestion.correctAnswerIndex) {
+        btn.classList.add("bg-green-100", "border-green-500");
+        btn.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${btn.textContent}`;
+        // Spawn fireworks in random positions
+        for (let i = 0; i < 14; i++) {
+          const x = window.innerWidth * Math.random();
+          const y = window.innerHeight * Math.random();
+          spawnFirework(x, y);
         }
-      });
-
-      answer = lines[lines.length - 1].trim().toUpperCase();
-
-      parsedQuestions.push({
-        number: parsedQuestions.length + 1, // Auto-generate question number
-        question: questionText,
-        options: options,
-        answer: answer
-      });
-    });
-
-    return parsedQuestions;
-  }
-
-  function getRandomQuestion() {
-    const randomIndex = Math.floor(Math.random() * questions.length);
-    return questions[randomIndex];
-  }
-
-  function loadQuestion() {
-    const question = getRandomQuestion();
-    currentQuestionIndex = questions.indexOf(question);
-
-    const quizContainer = document.getElementById('quiz-container');
-    quizContainer.innerHTML = `
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Question ${question.number}</h5>
-          <p class="card-text">${question.question}</p>
-          <form id="quiz-form">
-            ${Object.entries(question.options).map(([key, value]) => `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="answer" id="answer-${key}" value="${key}">
-                <label class="form-check-label" for="answer-${key}">
-                  ${key}: ${value}
-                </label>
-              </div>
-            `).join('')}
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
-          </form>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('quiz-form').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const selectedOption = document.querySelector('input[name="answer"]:checked');
-      if (selectedOption) {
-        const userAnswer = selectedOption.value;
-        checkAnswer(userAnswer, question.answer);
       } else {
-        alert('Please select an answer.');
+        btn.classList.add("bg-red-100", "border-red-500");
+        btn.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 mr-2"></i>${btn.textContent}`;
+        const correctBtn = answers[currentQuestion.correctAnswerIndex];
+        correctBtn.classList.add("bg-green-100", "border-green-500");
+        correctBtn.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${correctBtn.textContent}`;
       }
-    });
-  }
 
-  function checkAnswer(userAnswer, correctAnswer) {
-    const resultContainer = document.getElementById('result-container');
-    if (userAnswer === correctAnswer) {
-      resultContainer.innerHTML = `<div class="alert alert-success">Correct!</div>`;
-    } else {
-      resultContainer.innerHTML = `<div class="alert alert-danger">Wrong! The correct answer is ${correctAnswer}.</div>`;
+      document.getElementById("nextBtn").classList.remove("invisible");
     }
 
-    setTimeout(() => {
-      resultContainer.innerHTML = '';
-      loadQuestion();
-    }, 2000);
-  }
-
-  document.getElementById('load-quiz').addEventListener('click', function() {
-    const textInput = document.getElementById('json-input').value;
-    try {
-      questions = parseTextInput(textInput);
-    } catch (e) {
-      alert('Invalid input. Please enter a valid quiz text.');
-      return;
-    }
-
-    if (questions && questions.length > 0) {
-      document.getElementById('input-container').style.display = 'none';
-      document.getElementById('quiz-container').style.display = 'block';
-      loadQuestion();
-    } else {
-      alert('No valid questions found.');
-    }
-  });
-</script>
-
+    document.getElementById("nextBtn").onclick = showRandomQuestion;
+    loadData();
+  </script>
 </body>
+
 </html>
