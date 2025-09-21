@@ -9,115 +9,344 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .embed-bg {
+      background: url('/bg.png');
+      background-size: cover;
+      background-position: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.07;
+      z-index: -1;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #92400e 100%);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .gradient-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.2"/><circle cx="10" cy="90" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    }
+
+    .card {
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
     .fade-in {
-      animation: fadeIn 0.4s ease-in;
+      animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px) scale(0.98);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
+    }
+
+    .slide-in {
+      animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .answer-btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border: 2px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .answer-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    .answer-btn:hover::before {
+      left: 100%;
+    }
+
+    .answer-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      border-color: #f59e0b;
+    }
+
+    .correct {
+      background: linear-gradient(145deg, #dcfce7, #bbf7d0) !important;
+      border-color: #22c55e !important;
+      transform: scale(1.02);
+    }
+
+    .incorrect {
+      background: linear-gradient(145deg, #fef2f2, #fecaca) !important;
+      border-color: #ef4444 !important;
+      transform: scale(0.98);
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .next-btn {
+      background: linear-gradient(145deg, #f59e0b, #d97706);
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .next-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px -5px rgba(245, 158, 11, 0.6);
     }
 
     .firework {
       position: fixed;
       font-size: 2rem;
-      animation: pop 1s ease-out forwards;
+      animation: fireworkPop 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
       pointer-events: none;
+      z-index: 1000;
     }
 
-    @keyframes pop {
+    @keyframes fireworkPop {
       0% {
-        transform: scale(0.5);
+        transform: scale(0.3) rotate(0deg);
         opacity: 1;
       }
 
-      80% {
-        transform: scale(1.5);
+      50% {
+        transform: scale(1.2) rotate(180deg);
         opacity: 1;
       }
 
       100% {
-        transform: scale(2);
+        transform: scale(2) rotate(360deg);
         opacity: 0;
+      }
+    }
+
+    .question-number {
+      background: linear-gradient(145deg, #f59e0b, #d97706);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .7;
       }
     }
   </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-yellow-50 to-yellow-100 flex items-center justify-center p-4">
-  <div class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 sm:p-8 fade-in relative overflow-hidden">
+<body class="gradient-bg flex items-center justify-center p-4">
+
+  <div class="embed-bg"></div>
+
+  <div class="w-full max-w-3xl card rounded-3xl p-4 sm:p-8 fade-in relative overflow-hidden">
+    <!-- Decorative elements -->
+    <div
+      class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full opacity-10 -translate-y-16 translate-x-16">
+    </div>
+    <div
+      class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-yellow-400 to-orange-400 rounded-full opacity-10 translate-y-12 -translate-x-12">
+    </div>
+
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-yellow-900 flex items-center gap-2">
-        <i class="fa-solid fa-landmark"></i> Quiz Lịch sử
-      </h1>
-      <span id="progress" class="text-sm text-gray-600"></span>
+    <div class="flex flex-row justify-between items-center gap-3 sm:gap-4 mb-4 sm:mb-8">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="p-2 sm:p-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl sm:rounded-2xl shadow-lg">
+          <i class="fa-solid fa-landmark text-white text-lg sm:text-xl"></i>
+        </div>
+        <div>
+          <h1
+            class="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+            Quiz Lịch sử
+          </h1>
+          <!-- <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Khám phá kiến thức lịch sử Việt Nam</p> -->
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="question-number slide-in text-xs sm:text-sm w-8 h-8 sm:w-10 sm:h-10" id="questionNumber">1</div>
+        <div class="text-right">
+          <div class="text-xs sm:text-sm text-gray-600">Tiến độ</div>
+          <div class="w-16 sm:w-24 h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div class="progress-bar h-full rounded-full" id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Question -->
-    <h2 id="question" class="text-lg sm:text-xl font-semibold mb-6 text-gray-800 fade-in"></h2>
+    <div class="mb-4 sm:mb-8">
+      <h2 id="question" class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 fade-in leading-relaxed"></h2>
+    </div>
 
     <!-- Answers -->
-    <div id="answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+    <div id="answers" class="grid grid-cols-1 gap-2 sm:gap-4 mb-4 sm:mb-8"></div>
 
     <!-- Next Button -->
-    <div class="mt-6 flex justify-center sm:justify-center">
+    <div class="flex justify-center">
       <button id="nextBtn"
-        class="invisible w-full sm:w-auto bg-yellow-700 hover:bg-yellow-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-forward"></i> Tiếp
+        class="invisible next-btn text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 text-base sm:text-lg">
+        <i class="fa-solid fa-arrow-right"></i>
+        <span>Câu tiếp theo</span>
       </button>
     </div>
   </div>
 
   <script>
-    let data = [];
+    // Mock data for demonstration
+    const mockData = [
+      {
+        question: "Ai là vị vua đầu tiên của nhà Lý?",
+        answer: ["Lý Thái Tổ", "Lý Thái Tông", "Lý Thánh Tông", "Lý Nhân Tông"],
+        correctAnswerIndex: 0
+      },
+      {
+        question: "Trận Bạch Đằng nổi tiếng năm 1288 do ai chỉ huy?",
+        answer: ["Trần Hưng Đạo", "Trần Quốc Tuấn", "Lê Lợi", "Nguyễn Trãi"],
+        correctAnswerIndex: 0
+      },
+      {
+        question: "Kinh đô đầu tiên của nhà Nguyễn là gì?",
+        answer: ["Huế", "Hà Nội", "Thăng Long", "Phú Xuân"],
+        correctAnswerIndex: 3
+      },
+      {
+        question: "Cuộc khởi nghĩa Lam Sơn được lãnh đạo bởi ai?",
+        answer: ["Lê Lợi", "Nguyễn Trãi", "Trần Hưng Đạo", "Lý Thường Kiệt"],
+        correctAnswerIndex: 0
+      },
+      {
+        question: "Nhà Lý tồn tại trong khoảng thời gian nào?",
+        answer: ["1009-1225", "1010-1226", "1009-1226", "1010-1225"],
+        correctAnswerIndex: 2
+      }
+    ];
+
+    let data = mockData;
     let used = [];
     let currentQuestion = null;
+    let currentQuestionIndex = 0;
 
     async function loadData() {
-      const res = await fetch('/data.json');
-      data = await res.json();
+      try {
+        const res = await fetch('/data.json');
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (error) {
+        console.log('Using mock data');
+      }
       showRandomQuestion();
     }
 
     function showRandomQuestion() {
       document.getElementById("nextBtn").classList.add("invisible");
 
-      if (used.length === data.length) used = []; // reset if all used
+      if (used.length === data.length) {
+        used = [];
+        currentQuestionIndex = 0;
+      }
+
       let q;
       do {
         q = data[Math.floor(Math.random() * data.length)];
       } while (used.includes(q));
       used.push(q);
       currentQuestion = q;
+      currentQuestionIndex = used.length;
 
-      document.getElementById("progress").textContent = `Câu ${used.length}/${data.length}`;
+      // Update progress
+      const progress = (used.length / data.length) * 100;
+      document.getElementById("progressBar").style.width = progress + "%";
+      document.getElementById("questionNumber").textContent = used.length;
 
+      // Update question
       const qElem = document.getElementById("question");
       qElem.textContent = q.question;
       qElem.classList.remove("fade-in");
-      void qElem.offsetWidth; // restart animation
+      void qElem.offsetWidth;
       qElem.classList.add("fade-in");
 
+      // Update answers
       const answersDiv = document.getElementById("answers");
       answersDiv.innerHTML = "";
       q.answer.forEach((ans, idx) => {
-        const btn = document.createElement("button");
-        btn.innerHTML = `<i class="fa-solid fa-scroll text-yellow-700 mr-2"></i>${ans}`;
-        btn.className = "answer fade-in w-full text-left px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-yellow-50 transition duration-300";
-        btn.onclick = () => checkAnswer(btn, idx);
-        answersDiv.appendChild(btn);
+        setTimeout(() => {
+          const btn = document.createElement("button");
+          btn.innerHTML = `
+            <div class="flex items-center gap-2 sm:gap-3">
+              <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center text-xs sm:text-sm font-semibold text-amber-800">
+                ${String.fromCharCode(65 + idx)}
+              </div>
+              <span class="text-left flex-1 text-sm sm:text-base">${ans}</span>
+            </div>
+          `;
+          btn.className = "answer-btn w-full px-3 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl slide-in";
+          btn.onclick = () => checkAnswer(btn, idx);
+          answersDiv.appendChild(btn);
+        }, idx * 100);
       });
     }
 
-    const emojiList = ["🎉", "🏆", "⭐", "✨", "🔥", "🥳", "👏", "💯", "🥇", "🗿"];
+    const emojiList = ["🎉", "🏆", "⭐", "✨", "🔥", "🥳", "👏", "💯", "🥇", "🎊", "🌟", "💫"];
 
     function spawnFirework(x, y) {
       const fw = document.createElement("div");
@@ -126,31 +355,40 @@
       fw.style.left = x + "px";
       fw.style.top = y + "px";
       document.body.appendChild(fw);
-      setTimeout(() => fw.remove(), 1000);
+      setTimeout(() => fw.remove(), 1500);
     }
 
     function checkAnswer(btn, idx) {
-      const answers = document.querySelectorAll(".answer");
+      const answers = document.querySelectorAll(".answer-btn");
       answers.forEach(a => a.disabled = true);
 
       if (idx === currentQuestion.correctAnswerIndex) {
-        btn.classList.add("bg-green-100", "border-green-500");
-        btn.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${btn.textContent}`;
-        // Spawn fireworks in random positions
-        for (let i = 0; i < 14; i++) {
-          const x = window.innerWidth * Math.random();
-          const y = window.innerHeight * Math.random();
-          spawnFirework(x, y);
+        btn.classList.add("correct");
+        btn.innerHTML = btn.innerHTML.replace(/class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-orange-100 to-amber-100/, 'class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500');
+        btn.querySelector('span').innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${btn.querySelector('span').textContent}`;
+
+        // Enhanced fireworks
+        for (let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            spawnFirework(x, y);
+          }, i * 50);
         }
       } else {
-        btn.classList.add("bg-red-100", "border-red-500");
-        btn.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 mr-2"></i>${btn.textContent}`;
+        btn.classList.add("incorrect");
+        btn.innerHTML = btn.innerHTML.replace(/class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-orange-100 to-amber-100/, 'class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500');
+        btn.querySelector('span').innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 mr-2"></i>${btn.querySelector('span').textContent}`;
+
         const correctBtn = answers[currentQuestion.correctAnswerIndex];
-        correctBtn.classList.add("bg-green-100", "border-green-500");
-        correctBtn.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${correctBtn.textContent}`;
+        correctBtn.classList.add("correct");
+        correctBtn.innerHTML = correctBtn.innerHTML.replace(/class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-orange-100 to-amber-100/, 'class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500');
+        correctBtn.querySelector('span').innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>${correctBtn.querySelector('span').textContent}`;
       }
 
-      document.getElementById("nextBtn").classList.remove("invisible");
+      setTimeout(() => {
+        document.getElementById("nextBtn").classList.remove("invisible");
+      }, 500);
     }
 
     document.getElementById("nextBtn").onclick = showRandomQuestion;
